@@ -36,11 +36,15 @@ let Header = make("header", 1, ["h-12", "bg-orange-100", "fixed", "top-0", "w-fu
 let heroSection = make("section", 1, ["h-[350px]", "flex", "flex-col", "items-center", "justify-center", "mt-12", "bg-red-100", "relative", "isolate", "overflow-hidden"]);
 let collectionSection = make("section", 1, ["py-16"]);
 let main = make("main");
+let footer = make("footer", 1, ["py-20", "bg-slate-800"]);
+let modalSection = make("setion", 1, ["modal", "hidden", "fixed", "inset-0", "flex", "items-center", "justify-center", "isolate"]);
 
 body.appendChild(Header);
 main.appendChild(heroSection);
 main.appendChild(collectionSection);
 body.appendChild(main);
+body.appendChild(modalSection);
+body.appendChild(footer);
 
 // ================================================================================================ Header
 
@@ -54,6 +58,16 @@ let headerMenuOption3 = make("li", 1, ["font-semibold", "cursor-pointer", "trans
 addHoverEffect(headerMenuOption1, headerMenuOption1, "scale-105");
 addHoverEffect(headerMenuOption2, headerMenuOption2, "scale-105");
 addHoverEffect(headerMenuOption3, headerMenuOption3, "scale-105");
+headerMenuOption1.addEventListener("click", () => {
+    showAll == 0 ? showAll = 1 : showAll = 0;
+    blockLoad();
+})
+headerMenuOption2.addEventListener("click", () => {
+    showModal();
+})
+headerMenuOption3.addEventListener("click", () => {
+    showModal();
+})
 let headerMenu = make("ul", 1, ["flex", "gap-6"]);
 headerMenu.appendChild(headerMenuOption1);
 headerMenu.appendChild(headerMenuOption2);
@@ -129,6 +143,7 @@ let collectionBox = make("div", 1, ["container", "max-w-[1170px]", "mx-auto", "g
 
 let boxCount = 0;
 let boxloaded = 0;
+let showAll = 0;
 
 for (let i = 0; i < 30; i++) {
     boxCount += 1;
@@ -143,6 +158,9 @@ for (let i = 0; i < 30; i++) {
     let boxIngredientMore = make("span", 1, ["ml-1", "mt-1", "mb-3"], "...");
     let boxButton = make("button", 1, ["mx-3", "transition-all", "shadow-slate-300", "px-6", "py-2", "rounded", "bg-orange-600", "text-white", "font-bold", "cursor-pointer"], "View Details");
     addHoverEffect(boxButton, boxButton, "shadow-md");
+    boxButton.addEventListener("click", () => {
+        showModal();
+    })
 
     for (let i = 0; i < 3; i++) {
         let boxCategorySpan = make("span", 1, ["mx-1", "text-xs", "px-2", "pb-1", "cursor-pointer", "bg-blue-300", "rounded-full", "text-white"], "Category");
@@ -167,40 +185,8 @@ for (let i = 0; i < 30; i++) {
 collectionSection.appendChild(collectionHeading);
 collectionSection.appendChild(collectionBox);
 
-let pageCount = Math.ceil(boxCount / 6);
-if (pageCount > 1) {
-    let collectionPaginationContainer = make("div", 1, ["mx-auto", "flex", "gap-3", "justify-center", "py-2", "px-4"]);
-    let collectionPaginationLeft = make("p", 1, ["pagination_move_left", "hidden", "py-1", "px-2", "inline-block", "cursor-pointer"], "<");
-    collectionPaginationLeft.addEventListener("click", () => {
-        boxloaded -= 1;
-        showBlocks(boxloaded);
-        updatePagination(collectionPaginationLeft, collectionPaginationRight);
-    })
-    collectionPaginationContainer.appendChild(collectionPaginationLeft);
-    for (let i = 0; i < pageCount; i++) {
-        let collectionPaginationRoll = make("p", 1, ["pagination_anchor", "py-1", "px-2", "inline-block", "cursor-pointer"], i+1);
-        collectionPaginationRoll.setAttribute("data-pagination-roll", i);
-        collectionPaginationRoll.addEventListener("click", () => {
-            boxloaded = i;
-            showBlocks(boxloaded);
-            updatePagination(collectionPaginationLeft, collectionPaginationRight);
-        })
-        collectionPaginationContainer.appendChild(collectionPaginationRoll);
-    }let collectionPaginationRight = make("p", 1, ["pagination_move_rightight", "hidden", "py-1", "px-2", "inline-block", "cursor-pointer"], ">");
-    collectionPaginationContainer.appendChild(collectionPaginationRight);
-    collectionPaginationRight.addEventListener("click", () => {
-        boxloaded += 1;
-        showBlocks(boxloaded);
-        updatePagination(collectionPaginationLeft, collectionPaginationRight);
-    })
-
-    collectionSection.appendChild(collectionPaginationContainer);
-    document.querySelector(".pagination_anchor").classList.add("font-bold");
-    updatePagination(collectionPaginationLeft, collectionPaginationRight);
-    
-}
-
 function updatePagination(collectionPaginationLeft, collectionPaginationRight) {
+    document.querySelector(".pagination_anchor_container").classList.remove("hidden");
     let allPaginationAnchor = document.querySelectorAll(".pagination_anchor");
     allPaginationAnchor.forEach(item => item.classList.remove("font-bold"));
     allPaginationAnchor[boxloaded].classList.add("font-bold");
@@ -232,23 +218,186 @@ function updatePagination(collectionPaginationLeft, collectionPaginationRight) {
     }
 }
 
-const showBlocks = boxloaded => {
-    document.querySelectorAll("[data-block-position]").forEach(item => {
-        if (Math.floor(parseInt(item.getAttribute("data-block-position")) / 6) == boxloaded) {
-            item.classList.remove("hidden");
-        } else {
-            item.classList.add("hidden");
-        }
-    })
+function hidePagination () {
+    document.querySelector(".pagination_anchor_container").classList.add("hidden");
+}
+function showPagination () {
+    document.querySelector(".pagination_anchor_container").classList.remove("hidden");
 }
 
+const showBlocks = boxloaded => {
+    if (boxloaded != "all") {
+        document.querySelectorAll("[data-block-position]").forEach(item => {
+            if (Math.floor(parseInt(item.getAttribute("data-block-position")) / 6) == boxloaded) {
+                item.classList.remove("hidden");
+            } else {
+                item.classList.add("hidden");
+            }
+        })
+    } else {
+        document.querySelectorAll("[data-block-position]").forEach(item => item.classList.remove("hidden"));
+    }
+}
 
+let pageCount = Math.ceil(boxCount / 6);
+if (pageCount > 1) {
+    let collectionPaginationContainer = make("div", 1, ["pagination_anchor_container", "mx-auto", "flex", "gap-3", "justify-center", "py-2", "px-4"]);
+    let collectionPaginationLeft = make("p", 1, ["pagination_move_left", "hidden", "py-1", "px-2", "inline-block", "cursor-pointer"], "<");
+    collectionPaginationLeft.addEventListener("click", () => {
+        boxloaded -= 1;
+        showBlocks(boxloaded);
+        updatePagination(collectionPaginationLeft, collectionPaginationRight);
+    })
+    collectionPaginationContainer.appendChild(collectionPaginationLeft);
+    for (let i = 0; i < pageCount; i++) {
+        let collectionPaginationRoll = make("p", 1, ["pagination_anchor", "py-1", "px-2", "inline-block", "cursor-pointer"], i+1);
+        collectionPaginationRoll.setAttribute("data-pagination-roll", i);
+        collectionPaginationRoll.addEventListener("click", () => {
+            boxloaded = i;
+            showBlocks(boxloaded);
+            updatePagination(collectionPaginationLeft, collectionPaginationRight);
+        })
+        collectionPaginationContainer.appendChild(collectionPaginationRoll);
+    }let collectionPaginationRight = make("p", 1, ["pagination_move_rightight", "hidden", "py-1", "px-2", "inline-block", "cursor-pointer"], ">");
+    collectionPaginationContainer.appendChild(collectionPaginationRight);
+    collectionPaginationRight.addEventListener("click", () => {
+        boxloaded += 1;
+        showBlocks(boxloaded);
+        updatePagination(collectionPaginationLeft, collectionPaginationRight);
+    })
 
-showBlocks(boxloaded);
+    collectionSection.appendChild(collectionPaginationContainer);
+    document.querySelector(".pagination_anchor").classList.add("font-bold");
+    updatePagination(collectionPaginationLeft, collectionPaginationRight);
+}
 
+const blockLoad = () => {
+    if (showAll == 0) {
+        showBlocks(boxloaded);
+        showPagination();
+    } else {
+        showBlocks("all");
+        hidePagination();
+    }
+}
+blockLoad();
 
+// ================================================================================================= Modal
 
+let modalContent = make("div", 1, ["bg-white", "max-w-xl", "w-full", "rounded", "border"]);
+let modalBackground = make("div", 1, ["absolute", "inset-0", "bg-slate-800", "opacity-50", "-z-10"]);
+let modalHeading = make("h3", 1, ["font-bold", "px-10", "py-3", "border-b"], "Modal Heading");
+let modalBody = make("div", 1, ["px-4", "py-3"]);
+let modalImage = make("img", 1, ["w-full"]);
+modalImage.setAttribute("src", "https://picsum.photos/400/200");
+let modalcontent = make("p", 1, ["my-4"], "HEllo Modal");
+modalBackground.addEventListener("click", () => {
+    hideModal();
+})
 
+modalBody.appendChild(modalImage);
+modalBody.appendChild(modalcontent);
+modalContent.appendChild(modalHeading);
+modalContent.appendChild(modalBody);
+modalSection.appendChild(modalContent);
+modalSection.appendChild(modalBackground);
+
+function hideModal () {
+    document.querySelector(".modal").classList.add("hidden");
+}
+
+function showModal () {
+    document.querySelector(".modal").classList.remove("hidden");
+}
+function modalBuilder(input) {
+
+}
+// ======================================================================================== Footer Section
+
+let footerContainer = make("div", 1, ["container", "max-w-[1170px]", "w-100", "mx-auto", "grid", "grid-cols-4", "gap-8"]);
+let footerText = make("p", 1, ["text-center", "w-100", "text-white"], "Hello world");
+let footerColumn1 = make("div");
+let footerColumn2 = make("div");
+let footerColumn3 = make("div");
+let footerColumn4 = make("div");
+let footerLogo = make("img", 1, ["object-cover", "h-20", "w-44", "cursor-pointer"]);
+footerLogo.setAttribute("src", "./images/logo.png");
+let footerContent = make("p", 1, ["text-white", "mt-4"], "SUN BURNT is a Delice Food related website, aimed to practice and improve front-end development with API");
+footerColumn1.appendChild(footerLogo);
+footerColumn1.appendChild(footerContent);
+
+let footerHeading1 = make("p", 1, ["text-white", "text-xl", "font-bold", "mb-10"], "Explore");
+let footerMenu1Option1 = make("p", 1, ["text-white", "cursor-pointer", "mb-2"], "All Recipies");
+let footerMenu1Option2 = make("p", 1, ["text-white", "cursor-pointer", "mb-2"], "Try Random");
+let footerMenu1Option3 = make("p", 1, ["text-white", "cursor-pointer", "mb-2"], "Latest Recipe");
+footerMenu1Option1.addEventListener("click", () => {
+    showAll == 0 ? showAll = 1 : showAll = 0;
+    blockLoad();
+})
+footerMenu1Option2.addEventListener("click", () => {
+    showModal();
+})
+footerMenu1Option3.addEventListener("click", () => {
+    showModal();
+})
+footerColumn2.appendChild(footerHeading1);
+footerColumn2.appendChild(footerMenu1Option1);
+footerColumn2.appendChild(footerMenu1Option2);
+footerColumn2.appendChild(footerMenu1Option3);
+
+let footerHeading2 = make("p", 1, ["text-white", "text-xl", "font-bold", "mb-10"], "Contact Us");
+let footerMenu2Option1 = make("p", 1, ["text-white", "cursor-pointer", "mb-2"], "Email Us");
+let footerMenu2Option2 = make("p", 1, ["text-white", "cursor-pointer", "mb-2"], "Book a meeting");
+let footerMenu2Option3 = make("p", 1, ["text-white", "cursor-pointer", "mb-2"], "Contact Support");
+footerMenu2Option1.addEventListener("click", () => {
+    modalBuilder("email");
+    showModal();
+})
+footerMenu2Option2.addEventListener("click", () => {
+    modalBuilder("meeting");
+    showModal();
+})
+footerMenu2Option3.addEventListener("click", () => {
+    modalBuilder("support");
+    showModal();
+})
+footerColumn3.appendChild(footerHeading2);
+footerColumn3.appendChild(footerMenu2Option1);
+footerColumn3.appendChild(footerMenu2Option2);
+footerColumn3.appendChild(footerMenu2Option3);
+
+let footerHeading3 = make("p", 1, ["text-white", "text-xl", "font-bold", "mb-10"], "About us");
+let footerMenu3Option1 = make("p", 1, ["text-white", "cursor-pointer", "mb-2"], "About Us");
+let footerMenu3Option2 = make("p", 1, ["text-white", "cursor-pointer", "mb-2"], "Our Story");
+let footerMenu3Option3 = make("p", 1, ["text-white", "cursor-pointer", "mb-2"], "Privacy Policy");
+let footerMenu3Option4 = make("p", 1, ["text-white", "cursor-pointer", "mb-2"], "Legal Support");
+footerMenu3Option1.addEventListener("click", () => {
+    modalBuilder("about");
+    showModal();
+})
+footerMenu3Option2.addEventListener("click", () => {
+    modalBuilder("story");
+    showModal();
+})
+footerMenu3Option3.addEventListener("click", () => {
+    modalBuilder("privacy");
+    showModal();
+})
+footerMenu3Option4.addEventListener("click", () => {
+    modalBuilder("legal");
+    showModal();
+})
+footerColumn4.appendChild(footerHeading3);
+footerColumn4.appendChild(footerMenu3Option1);
+footerColumn4.appendChild(footerMenu3Option2);
+footerColumn4.appendChild(footerMenu3Option3);
+footerColumn4.appendChild(footerMenu3Option4);
+
+footerContainer.appendChild(footerColumn1);
+footerContainer.appendChild(footerColumn2);
+footerContainer.appendChild(footerColumn3);
+footerContainer.appendChild(footerColumn4);
+footer.appendChild(footerContainer);
 
 
 
